@@ -6,6 +6,7 @@
 
 var UI = require('ui');
 var Vector2 = require('vector2');
+var ajax = require('ajax');
 
 var main = new UI.Card({
   title: 'Abfahrten',
@@ -16,10 +17,23 @@ var main = new UI.Card({
 });
 
 main.show();
+function geoToMVV(lat, lon) {
+  var d_lat = 48.137224-lat;
+  //var d_y = parseInt(lat - 55.5871) * 110970;
+  //var d_lon = 11.575492-lon;
+  var d_x = parseInt((lon + 48.077) * 74903.9);
+  var d_y = parseInt(d_lat * 2 * Math.PI * 6371 / 360 * 1000);
+  return {
+    x: d_x,
+    y: 826687 + d_y
+  };
+}
 
 main.on('show', function(e) {
   navigator.geolocation.getCurrentPosition(function(position) {
     main.body(position.coords.latitude + "\n" + position.coords.longitude);
+    var mvv = geoToMVV(position.coords.latitude , position.coords.longitude)
+    main.body(mvv.x + "\n" + mvv.y)
   });
 });
 
