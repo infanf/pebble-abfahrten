@@ -32,8 +32,16 @@ function geoToMVV(lat, lon) {
 main.on('show', function(e) {
   navigator.geolocation.getCurrentPosition(function(position) {
     main.body(position.coords.latitude + "\n" + position.coords.longitude);
-    var mvv = geoToMVV(position.coords.latitude , position.coords.longitude)
-    main.body(mvv.x + "\n" + mvv.y)
+    var mvv = geoToMVV(position.coords.latitude , position.coords.longitude);
+    main.body(mvv.x + "\n" + mvv.y);
+    var tmp_x = 4451672;
+    var tmp_y = 827469;
+    ajax({
+      url: "http://beta.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+tmp_x+"%3A"+tmp_y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
+      type: 'json' 
+    }, function(data) {
+      main.body(data.pins[0].desc)
+    });
   });
 });
 
