@@ -64,7 +64,6 @@ function utf8_decode (strData) { // eslint-disable-line camelcase
 }
 
 var UI = require('ui');
-var Vector2 = require('vector2');
 var ajax = require('ajax');
 
 var main = new UI.Card({
@@ -77,14 +76,19 @@ var main = new UI.Card({
 
 main.show();
 function geoToMVV(lat, lon) {
-  var d_lat = 48.137224-lat;
+  var d_lat = 48.139398-lat;
+  var m_per_lon = Math.cos(lat/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
+  //var m_per_lon = Math.cos(48.139398/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
+  var d_lon = 11.578584-lon;
   //var d_y = parseInt(lat - 55.5871) * 110970;
-  //var d_lon = 11.575492-lon;
-  var d_x = parseInt((lon + 48.077) * 74903.9);
+  //var d_lon = 11.578584-lon;
+  //relativ zum Nationaltheater: "4468748.00000,826433.00000" 48.139398, 11.578584
+  //var d_x = parseInt((lon + 48.1732333333333) * 74789.366666667);
+  var d_x = parseInt(d_lon * m_per_lon);
   var d_y = parseInt(d_lat * 2 * Math.PI * 6371 / 360 * 1000);
   return {
-    x: d_x,
-    y: 826687 + d_y
+    x: 4468748 - d_x,
+    y: 826433 + d_y
   };
 }
 
@@ -102,8 +106,9 @@ var departures = new UI.Menu({
 var start = function() {
   navigator.geolocation.getCurrentPosition(function(position) {
     var mvv = geoToMVV(position.coords.latitude , position.coords.longitude);
-    mvv.x = 4451672;
-    mvv.y = 827469;
+    console.debug(mvv.x+":"+mvv.y);
+    //mvv.x = 4467303;
+    //mvv.y = 826265;
     ajax({
       url: "http://beta.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
       type: 'json' 
@@ -111,12 +116,14 @@ var start = function() {
       menu.show();
       var pins = [];
       for (var i in data.pins) {
-        pins.push({
-          //title: utf8_decode(data.pins[i].desc),
-          title: data.pins[i].desc,
-          subtitle: data.pins[i].distance + "m entfernt",
-          stationId: data.pins[i].id
-        });
+        if (data.pins[i].type == "STOP") {
+          pins.push({
+            //title: utf8_decode(data.pins[i].desc),
+            title: data.pins[i].desc,
+            subtitle: data.pins[i].distance + "m entfernt",
+            stationId: data.pins[i].id
+          });
+        }
       }
       menu.items(0, pins);
     });

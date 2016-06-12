@@ -3,7 +3,7 @@
     "capabilities": [
         "location"
     ],
-    "companyName": "pebble@infanf.de",
+    "companyName": "infanf",
     "longName": "MVV Abfahrtszeiten Monitor",
     "projectType": "pebblejs",
     "resources": {
@@ -29,14 +29,14 @@
                 "type": "font"
             },
             {
-                "file": "images/icon",
-                "menuIcon": true,
-                "name": "IMAGES_ICON",
+                "file": "images/mvv.png",
+                "name": "IMAGES_MVV_PNG",
                 "type": "png"
             },
             {
-                "file": "images/mvv.png",
-                "name": "IMAGES_MVV_PNG",
+                "file": "images/icon",
+                "menuIcon": true,
+                "name": "IMAGES_ICON",
                 "type": "png"
             }
         ]
@@ -49,8 +49,8 @@
         "chalk"
     ],
     "uuid": "54a4d60e-d4ca-4022-8631-e858acf460e7",
-    "versionCode": 1.1,
-    "versionLabel": "1.1",
+    "versionCode": 1,
+    "versionLabel": "1.4",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false
