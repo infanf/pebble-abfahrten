@@ -4,7 +4,7 @@
  * This is where you write your app.
  */
 
-if (navigator.language.match('/^de/')) {
+if (navigator.language.match(/^de/)) {
   var lang = "DE";
 } else {
   var lang = "EN";
