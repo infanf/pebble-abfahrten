@@ -100,8 +100,8 @@ main.show();
 }*/
 
 function geoToMVV(lat, lon, callback) {
-  //lat = 48.139398;
-  //lon = 11.578584;
+  /*lat = 48.139398;
+  lon = 11.578584;*/
   ajax({
     url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
     type: 'json' 
@@ -129,6 +129,8 @@ var menu = new UI.Menu({
 var departures = new UI.Menu({
   sections: []
 });
+
+var updater = 0;
 
 var start = function() {
   main.body(isDe?"Deine Position wird gesucht...":"Finding your current location...");
@@ -175,7 +177,7 @@ var parseData = function(data) {
   return jsonData;
 };
 
-menu.on('select', function(e) {
+var stationdetails = function(e) {
   ajax({
     url: "http://beta.mvv-muenchen.de/xhr_departures?locationServerActive=1&stateless=1&type_dm=any&useAllStops=1&useRealtime=1&limit=100&mode=direct&zope_command=enquiry%3Adepartures&compact=1&name_dm="+e.item.stationId,
   }, function (data) {
@@ -195,8 +197,13 @@ menu.on('select', function(e) {
       title: e.item.title,
       items: body
     });
-    departures.show();
+    updater = setTimeout(function(){stationdetails(e);}, 30000);
   });
+};
+
+menu.on('select', function(e) {
+  stationdetails(e);
+  departures.show();
 });
 
 main.on("click", "select", start);
@@ -206,6 +213,7 @@ main.on("show", function(){
 
 departures.on("click", "back", function(){
   menu.show();
+  clearTimeout(updater);
 });
 
 menu.on("click", "back", function(){
