@@ -76,7 +76,7 @@ var ajax = require('ajax');
 var main = new UI.Card({
   title: isDe?'Abfahrten':"Departures",
   icon: 'images/mvv.png',
-  body: isDe?'Select drücken zur Haltestellensuche.':"Press select to search nearby stops.",
+  body: isDe?'Select drücken zur Suche.':"Press select to search nearby stops.",
   subtitleColor: 'indigo', // Named colors
   bodyColor: '#9a0036' // Hex colors
 });
@@ -106,7 +106,6 @@ function geoToMVV(lat, lon, callback) {
     url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
     type: 'json' 
   }, function(data) {
-    console.log(JSON.stringify(data));
     var coordinations = [0,0];
     if(data.stopFinder) {
       coordinations = data.stopFinder.point.ref.coords.split(',');
@@ -140,7 +139,7 @@ var start = function() {
       //mvv.x = 4467303;
       //mvv.y = 826265;
       ajax({
-        url: "http://beta.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
+        url: "http://efa.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
         type: 'json' 
       }, function(data) {
         menu.show();
@@ -177,16 +176,18 @@ var parseData = function(data) {
   return jsonData;
 };
 
+var currentStation = 0;
+
 var stationdetails = function(e) {
   ajax({
-    url: "http://beta.mvv-muenchen.de/xhr_departures?locationServerActive=1&stateless=1&type_dm=any&useAllStops=1&useRealtime=1&limit=100&mode=direct&zope_command=enquiry%3Adepartures&compact=1&name_dm="+e.item.stationId,
+    url: "http://efa.mvv-muenchen.de/xhr_departures?locationServerActive=1&stateless=1&type_dm=any&useAllStops=1&useRealtime=1&limit=100&mode=direct&zope_command=enquiry%3Adepartures&compact=1&name_dm="+e.item.stationId,
   }, function (data) {
     var body = [];
     var jsonData = parseData (data);
     for (var i in jsonData) {
       var now = new Date();
-      var then = new Date(""+now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate()+" "+jsonData[i].time+":00");
-      var diff = ((Math.floor((then - now) / 1000 / 60) + 24*60) % (24*60) + 24*60) % 1440;
+      var then = new Date(""+now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate()+" "+jsonData[i].time+":00");
+      var diff = Math.max(0, Math.round((then - now) / 1000 / 60) + 1440) % 1440;
       body.push({
         title: jsonData[i].linie + " " + jsonData[i].finalStop,
         subtitle: jsonData[i].time + " (in " +diff+ (isDe?" Minuten)":" minutes)"),
@@ -197,11 +198,22 @@ var stationdetails = function(e) {
       title: e.item.title,
       items: body
     });
-    updater = setTimeout(function(){stationdetails(e);}, 30000);
+    updater = setTimeout(function(){
+      if(e.item.stationId == currentStation) {
+        stationdetails(e);
+      }
+    }, 20000);
   });
 };
 
 menu.on('select', function(e) {
+  currentStation = e.item.stationId;
+  departures.section(0, {
+    title: e.item.title,
+    items: [{
+      title: isDe?"Lade Abfahrtszeiten...":"Fetching data..."
+    }]
+  });
   stationdetails(e);
   departures.show();
 });
@@ -212,8 +224,7 @@ main.on("show", function(){
 });
 
 departures.on("click", "back", function(){
-  menu.show();
-  clearTimeout(updater);
+  departures.hide();
 });
 
 menu.on("click", "back", function(){
