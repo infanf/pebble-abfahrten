@@ -4,6 +4,13 @@
  * This is where you write your app.
  */
 
+if (navigator.language.match('/^de/')) {
+  var lang = "DE";
+} else {
+  var lang = "EN";
+}
+var isDe = lang == "DE";
+
 function utf8_decode (strData) { // eslint-disable-line camelcase
   //  discuss at: http://locutus.io/php/utf8_decode/
   // original by: Webtoolkit.info (http://www.webtoolkit.info/)
@@ -67,19 +74,19 @@ var UI = require('ui');
 var ajax = require('ajax');
 
 var main = new UI.Card({
-  title: 'Abfahrten',
+  title: isDe?'Abfahrten':"Departures",
   icon: 'images/mvv.png',
-  body: 'Deine Position wird gesucht...',
+  body: isDe?'Select drücken zur Haltestellensuche.':"Press select to search nearby stops.",
   subtitleColor: 'indigo', // Named colors
   bodyColor: '#9a0036' // Hex colors
 });
 
 main.show();
-function geoToMVV(lat, lon) {
-  var d_lat = 48.139398-lat;
+/*function geoToMVV(lat, lon) {
+  var d_lat = 48.139398-lat; //Relative Abweichung von der Mariensäule
   var m_per_lon = Math.cos(lat/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
   //var m_per_lon = Math.cos(48.139398/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
-  var d_lon = 11.578584-lon;
+  var d_lon = 11.578584-lon; //Relative Abweichung von der Mariensäule
   //var d_y = parseInt(lat - 55.5871) * 110970;
   //var d_lon = 11.578584-lon;
   //relativ zum Nationaltheater: "4468748.00000,826433.00000" 48.139398, 11.578584
@@ -90,11 +97,31 @@ function geoToMVV(lat, lon) {
     x: 4468748 - d_x,
     y: 826433 + d_y
   };
+}*/
+
+function geoToMVV(lat, lon, callback) {
+  //lat = 48.139398;
+  //lon = 11.578584;
+  ajax({
+    url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
+    type: 'json' 
+  }, function(data) {
+    console.log(JSON.stringify(data));
+    var coordinations = [0,0];
+    if(data.stopFinder) {
+      coordinations = data.stopFinder.point.ref.coords.split(',');
+    }
+    var mvv = {
+      x : coordinations[0],
+      y : coordinations[1]
+    };
+    callback (mvv);
+  });
 }
 
 var menu = new UI.Menu({
   sections: [{
-    title: "Haltestellen",
+    title: isDe?"Haltestellen":"nearby stops",
     items: []
   }]
 });
@@ -104,28 +131,30 @@ var departures = new UI.Menu({
 });
 
 var start = function() {
+  main.body(isDe?"Deine Position wird gesucht...":"Finding your current location...");
   navigator.geolocation.getCurrentPosition(function(position) {
-    var mvv = geoToMVV(position.coords.latitude , position.coords.longitude);
-    console.debug(mvv.x+":"+mvv.y);
-    //mvv.x = 4467303;
-    //mvv.y = 826265;
-    ajax({
-      url: "http://beta.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
-      type: 'json' 
-    }, function(data) {
-      menu.show();
-      var pins = [];
-      for (var i in data.pins) {
-        if (data.pins[i].type == "STOP") {
-          pins.push({
-            //title: utf8_decode(data.pins[i].desc),
-            title: data.pins[i].desc,
-            subtitle: data.pins[i].distance + "m entfernt",
-            stationId: data.pins[i].id
-          });
+    geoToMVV(position.coords.latitude , position.coords.longitude, function(mvv){
+      //console.debug(mvv.x+":"+mvv.y);
+      //mvv.x = 4467303;
+      //mvv.y = 826265;
+      ajax({
+        url: "http://beta.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
+        type: 'json' 
+      }, function(data) {
+        menu.show();
+        var pins = [];
+        for (var i in data.pins) {
+          if (data.pins[i].type == "STOP") {
+            pins.push({
+              //title: utf8_decode(data.pins[i].desc),
+              title: data.pins[i].desc,
+              subtitle: data.pins[i].distance + "m "+(isDe?"entfernt":"away"),
+              stationId: data.pins[i].id
+            });
+          }
         }
-      }
-      menu.items(0, pins);
+        menu.items(0, pins);
+      });
     });
   });
 };
@@ -155,11 +184,11 @@ menu.on('select', function(e) {
     for (var i in jsonData) {
       var now = new Date();
       var then = new Date(""+now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate()+" "+jsonData[i].time+":00");
-      var diff = (Math.floor((then - now) / 1000 / 60) + 24*60) % (24*60) + 24*60;
-      console.log(then.toString());
+      var diff = ((Math.floor((then - now) / 1000 / 60) + 24*60) % (24*60) + 24*60) % 1440;
       body.push({
         title: jsonData[i].linie + " " + jsonData[i].finalStop,
-        subtitle: jsonData[i].time + " (in " +diff+ " Minuten)"
+        subtitle: jsonData[i].time + " (in " +diff+ (isDe?" Minuten)":" minutes)"),
+        time: then
       });
     }
     departures.section(0, {
@@ -170,7 +199,10 @@ menu.on('select', function(e) {
   });
 });
 
-main.on("show", start);
+main.on("click", "select", start);
+main.on("show", function(){
+  main.body(isDe?'Select drücken zur Haltestellensuche.':"Press select to search nearby stops.");
+});
 
 departures.on("click", "back", function(){
   menu.show();
