@@ -70,6 +70,7 @@ function utf8_decode (strData) { // eslint-disable-line camelcase
   return tmpArr.join('');
 }
 
+var Platform = require('platform');
 var UI = require('ui');
 var ajax = require('ajax');
 
@@ -100,8 +101,8 @@ main.show();
 }*/
 
 function geoToMVV(lat, lon, callback) {
-  /*lat = 48.139398;
-  lon = 11.578584;*/
+  lat = 48.139398;
+  lon = 11.578584;
   ajax({
     url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
     type: 'json' 
@@ -188,10 +189,25 @@ var stationdetails = function(e) {
       var now = new Date();
       var then = new Date(""+now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate()+" "+jsonData[i].time+":00");
       var diff = Math.max(0, Math.round((then - now) / 1000 / 60) + 1440) % 1440;
+      var type = "r";
+      if (jsonData[i].linie.match(/^S\d/)) {
+        type = "s";
+      } else if(jsonData[i].linie.match(/^U\d/i)) {
+        type = "u";
+      } else if(jsonData[i].linie.match(/^N\d/i)) {
+        type = "n";
+      } else if(jsonData[i].linie.match(/^X\d/i)) {
+        type = "x";
+      } else if(parseInt(jsonData[i].linie) >= 40) {
+        type = "b";
+      } else if(parseInt(jsonData[i].linie) > 0) {
+        type = "t";
+      }
       body.push({
         title: jsonData[i].linie + " " + jsonData[i].finalStop,
         subtitle: jsonData[i].time + " (in " +diff+ (isDe?" Minuten)":" minutes)"),
-        time: then
+        time: then,
+        icon: "ICON_TRAIN_"+type.toUpper()
       });
     }
     departures.section(0, {
