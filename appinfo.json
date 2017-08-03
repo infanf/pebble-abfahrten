@@ -4,7 +4,7 @@
         "location"
     ],
     "companyName": "infanf",
-    "longName": "MVV Abfahrtszeiten Monitor",
+    "longName": "MVV Abfahrtszeiten-Monitor mit Favoriten",
     "projectType": "pebblejs",
     "resources": {
         "media": [
@@ -29,28 +29,8 @@
                 "type": "font"
             },
             {
-                "file": "images/n.png",
-                "name": "IMAGES_N_PNG",
-                "type": "png"
-            },
-            {
-                "file": "images/r.png",
-                "name": "IMAGES_R_PNG",
-                "type": "png"
-            },
-            {
                 "file": "images/x.png",
                 "name": "IMAGES_X_PNG",
-                "type": "png"
-            },
-            {
-                "file": "images/b.png",
-                "name": "IMAGES_B_PNG",
-                "type": "png"
-            },
-            {
-                "file": "images/t.png",
-                "name": "IMAGES_T_PNG",
                 "type": "png"
             },
             {
@@ -59,8 +39,23 @@
                 "type": "png"
             },
             {
+                "file": "images/t.png",
+                "name": "IMAGES_T_PNG",
+                "type": "png"
+            },
+            {
                 "file": "images/s.png",
                 "name": "IMAGES_S_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/r.png",
+                "name": "IMAGES_R_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/n.png",
+                "name": "IMAGES_N_PNG",
                 "type": "png"
             },
             {
@@ -73,11 +68,16 @@
                 "menuIcon": true,
                 "name": "IMAGES_ICON",
                 "type": "png"
+            },
+            {
+                "file": "images/b.png",
+                "name": "IMAGES_B_PNG",
+                "type": "png"
             }
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Abfahrtszeiten",
+    "shortName": "Bus und Bahn",
     "targetPlatforms": [
         "aplite",
         "basalt",
@@ -85,7 +85,7 @@
     ],
     "uuid": "54a4d60e-d4ca-4022-8631-e858acf460e7",
     "versionCode": 1,
-    "versionLabel": "1.8",
+    "versionLabel": "2.0",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false

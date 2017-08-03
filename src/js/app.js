@@ -11,6 +11,9 @@ if (navigator.language.match(/^de/)) {
 }
 var isDe = lang == "DE";
 
+// String which is shown in front of the name of a favorite station
+var FAV_SYMBOL = "* ";
+
 function utf8_decode (strData) { // eslint-disable-line camelcase
   //  discuss at: http://locutus.io/php/utf8_decode/
   // original by: Webtoolkit.info (http://www.webtoolkit.info/)
@@ -73,16 +76,9 @@ function utf8_decode (strData) { // eslint-disable-line camelcase
 var Platform = require('platform');
 var UI = require('ui');
 var ajax = require('ajax');
+// Used for saving stations as favorites
+var Settings = require('settings');
 
-var main = new UI.Card({
-  title: isDe?'Abfahrten':"Departures",
-  icon: 'images/mvv.png',
-  body: isDe?'Select drücken zur Suche.':"Press select to search nearby stops.",
-  subtitleColor: 'indigo', // Named colors
-  bodyColor: '#9a0036' // Hex colors
-});
-
-main.show();
 /*function geoToMVV(lat, lon) {
   var d_lat = 48.139398-lat; //Relative Abweichung von der Mariensäule
   var m_per_lon = Math.cos(lat/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
@@ -101,8 +97,9 @@ main.show();
 }*/
 
 function geoToMVV(lat, lon, callback) {
-  lat = 48.139398;
-  lon = 11.578584;
+  // Uncomment these two lines for testing only
+  //lat = 48.139398;
+  //lon = 11.578584;
   ajax({
     url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
     type: 'json' 
@@ -119,9 +116,93 @@ function geoToMVV(lat, lon, callback) {
   });
 }
 
-var menu = new UI.Menu({
+function getFavs() {
+  // get saved favorites
+  var favs = Settings.option("favorites");
+  // if there are saved favorites, parse them into an array
+  // otherwise return an empty array
+  return favs ? JSON.parse(favs) : [];
+}
+
+function setFavs(favs) {
+  // save new favorites
+  Settings.option("favorites", JSON.stringify(favs));
+}
+
+function saveAsFav(stopID, stopName) {
+  // add a stop to favorites
+  var favs = getFavs();
+  favs.push([stopID, stopName]);
+  setFavs(favs);
+}
+
+function removeFromFavs(stopID) {
+  // remove a stop from favorites
+  var favs = getFavs();
+  for (var i = 0; i < favs.length; i++) {
+    if (favs[i][0] == stopID) {
+      // when the stop with the correct ID is found, remove it
+      favs.splice(i, 1);
+      // and save the modified list of favorite stops
+      setFavs(favs);
+      return;
+    }
+  }
+}
+
+function isFav(stopID) {
+  // returns true iff a stop with the given ID is saved as a favorite
+  var favs = getFavs();
+  for (var i = 0; i < favs.length; i++) {
+    if (favs[i][0] == stopID) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function formatTitleWithStar(stopID, stopName) {
+  // if the given stop is a favorite, return its name asterisked (i.e. with a star: * )
+  // otherwise remove the asterisk from the name
+  if (isFav(stopID)) {
+    if (stopName.lastIndexOf(FAV_SYMBOL, 0) === 0) {
+      return stopName;
+    } else {
+      return FAV_SYMBOL + stopName;
+    }
+  } else {
+    if (stopName.lastIndexOf(FAV_SYMBOL, 0) === 0) {
+      return stopName.substring(FAV_SYMBOL.length, stopName.length);
+    } else {
+      return stopName;
+    }
+  }
+}
+
+function getFavItems() {
+  // return an array of favorite stops
+  // each element of the array has a title and a stationID
+  var favs = getFavs();
+  var items = [];
+  for (var i = 0; i < favs.length; i++) {
+    var item = {title: favs[i][1],
+                stationId: favs[i][0]};
+    items.push(item);
+  }
+  return items;
+}
+
+
+var updater = 0;
+var currentStation = 0;
+
+
+var mainMenu = new UI.Menu({
   sections: [{
-    title: isDe?"Haltestellen":"nearby stops",
+    title: isDe?"Haltestellen":"Saved stops",
+    items: []
+  }, {
+    title: isDe?"In der Nähe":"Nearby stops",
     items: []
   }]
 });
@@ -130,10 +211,11 @@ var departures = new UI.Menu({
   sections: []
 });
 
-var updater = 0;
 
 var start = function() {
-  main.body(isDe?"Deine Position wird gesucht...":"Finding your current location...");
+  mainMenu.show();
+  mainMenu.item(1, 0, {title: isDe?"Suche Position ...":"Fetching location ...",
+                       stationID: "INVALID"});
   navigator.geolocation.getCurrentPosition(function(position) {
     geoToMVV(position.coords.latitude , position.coords.longitude, function(mvv){
       //console.debug(mvv.x+":"+mvv.y);
@@ -143,19 +225,20 @@ var start = function() {
         url: "http://efa.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
         type: 'json' 
       }, function(data) {
-        menu.show();
         var pins = [];
         for (var i in data.pins) {
           if (data.pins[i].type == "STOP") {
+            var stopID = data.pins[i].id;
+            var stopTitle = formatTitleWithStar(stopID, data.pins[i].desc);
             pins.push({
-              //title: utf8_decode(data.pins[i].desc),
-              title: data.pins[i].desc,
-              subtitle: data.pins[i].distance + "m "+(isDe?"entfernt":"away"),
-              stationId: data.pins[i].id
+              //title: utf8_decode(stopTitle),
+              title: stopTitle,
+              subtitle: data.pins[i].distance + " m "+(isDe?"entfernt":"away"),
+              stationId: stopID
             });
           }
         }
-        menu.items(0, pins);
+        mainMenu.items(1, pins);
       });
     });
   });
@@ -177,8 +260,6 @@ var parseData = function(data) {
   return jsonData;
 };
 
-var currentStation = 0;
-
 var stationdetails = function(e) {
   ajax({
     url: "http://efa.mvv-muenchen.de/xhr_departures?locationServerActive=1&stateless=1&type_dm=any&useAllStops=1&useRealtime=1&limit=100&mode=direct&zope_command=enquiry%3Adepartures&compact=1&name_dm="+e.item.stationId,
@@ -188,26 +269,29 @@ var stationdetails = function(e) {
     for (var i in jsonData) {
       var now = new Date();
       var then = new Date(""+now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate()+" "+jsonData[i].time+":00");
+      if (then - now < 0) {
+        continue;
+      }
       var diff = Math.max(0, Math.round((then - now) / 1000 / 60) + 1440) % 1440;
-      var type = "r";
+      var type = "R";
       if (jsonData[i].linie.match(/^S\d/)) {
-        type = "s";
+        type = "S";
       } else if(jsonData[i].linie.match(/^U\d/i)) {
-        type = "u";
+        type = "U";
       } else if(jsonData[i].linie.match(/^N\d/i)) {
-        type = "n";
+        type = "N";
       } else if(jsonData[i].linie.match(/^X\d/i)) {
-        type = "x";
+        type = "X";
       } else if(parseInt(jsonData[i].linie) >= 40) {
-        type = "b";
+        type = "B";
       } else if(parseInt(jsonData[i].linie) > 0) {
-        type = "t";
+        type = "T";
       }
       body.push({
         title: jsonData[i].linie + " " + jsonData[i].finalStop,
         subtitle: jsonData[i].time + " (in " +diff+ (isDe?" Minuten)":" minutes)"),
         time: then,
-        icon: "ICON_TRAIN_"+type.toUpper()
+        icon: "IMAGES_"+type+"_PNG"
       });
     }
     departures.section(0, {
@@ -222,8 +306,25 @@ var stationdetails = function(e) {
   });
 };
 
-menu.on('select', function(e) {
-  currentStation = e.item.stationId;
+
+mainMenu.on('longSelect', function(e) {
+  var stationName = e.item.title;
+  var stationID = e.item.stationId;
+  if (stationID == "INVALID") {
+    return;
+  }
+  if (isFav(stationID)) {
+    removeFromFavs(stationID);
+  } else {
+    saveAsFav(stationID, stationName);
+  }
+  e.item.title = formatTitleWithStar(stationID, stationName);
+});
+
+mainMenu.on("select", function(e) {
+  if (e.item.stationId == "INVALID") {
+    return;
+  }
   departures.section(0, {
     title: e.item.title,
     items: [{
@@ -234,17 +335,13 @@ menu.on('select', function(e) {
   departures.show();
 });
 
-main.on("click", "select", start);
-main.on("show", function(){
-  main.body(isDe?'Select drücken zur Haltestellensuche.':"Press select to search nearby stops.");
+mainMenu.on("show", function(){
+  mainMenu.items(0, getFavItems());
 });
 
 departures.on("click", "back", function(){
   departures.hide();
 });
 
-menu.on("click", "back", function(){
-  main.show();
-});
 
 start();
