@@ -4,7 +4,7 @@
         "location"
     ],
     "companyName": "infanf",
-    "longName": "MVV Abfahrtszeiten-Monitor mit Favoriten",
+    "longName": "MVV Abfahrtszeiten Monitor",
     "projectType": "pebblejs",
     "resources": {
         "media": [
@@ -27,6 +27,91 @@
                 "file": "fonts/UbuntuMono-Regular.ttf",
                 "name": "MONO_FONT_14",
                 "type": "font"
+            },
+            {
+                "file": "images/u8.png",
+                "name": "IMAGES_U8_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u7.png",
+                "name": "IMAGES_U7_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u6.png",
+                "name": "IMAGES_U6_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u5.png",
+                "name": "IMAGES_U5_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u4.png",
+                "name": "IMAGES_U4_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u3.png",
+                "name": "IMAGES_U3_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u2.png",
+                "name": "IMAGES_U2_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/u1.png",
+                "name": "IMAGES_U1_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s4.png",
+                "name": "IMAGES_S4_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s7.png",
+                "name": "IMAGES_S7_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s8.png",
+                "name": "IMAGES_S8_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s3.png",
+                "name": "IMAGES_S3_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s20.png",
+                "name": "IMAGES_S20_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s2.png",
+                "name": "IMAGES_S2_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s1.png",
+                "name": "IMAGES_S1_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s5.png",
+                "name": "IMAGES_S5_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/s6.png",
+                "name": "IMAGES_S6_PNG",
+                "type": "png"
             },
             {
                 "file": "images/x.png",
@@ -77,7 +162,7 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Bus und Bahn",
+    "shortName": "MVV M\u00fcnchen",
     "targetPlatforms": [
         "aplite",
         "basalt",
@@ -85,7 +170,7 @@
     ],
     "uuid": "54a4d60e-d4ca-4022-8631-e858acf460e7",
     "versionCode": 1,
-    "versionLabel": "2.0",
+    "versionLabel": "2.2",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false

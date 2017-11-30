@@ -14,90 +14,14 @@ var isDe = lang == "DE";
 // String which is shown in front of the name of a favorite station
 var FAV_SYMBOL = "* ";
 
-function utf8_decode (strData) { // eslint-disable-line camelcase
-  //  discuss at: http://locutus.io/php/utf8_decode/
-  // original by: Webtoolkit.info (http://www.webtoolkit.info/)
-  //    input by: Aman Gupta
-  //    input by: Brett Zamir (http://brett-zamir.me)
-  // improved by: Kevin van Zonneveld (http://kvz.io)
-  // improved by: Norman "zEh" Fuchs
-  // bugfixed by: hitwork
-  // bugfixed by: Onno Marsman (https://twitter.com/onnomarsman)
-  // bugfixed by: Kevin van Zonneveld (http://kvz.io)
-  // bugfixed by: kirilloid
-  // bugfixed by: w35l3y (http://www.wesley.eti.br)
-  //   example 1: utf8_decode('Kevin van Zonneveld')
-  //   returns 1: 'Kevin van Zonneveld'
-
-  var tmpArr = [];
-  var i = 0;
-  var c1 = 0;
-  var seqlen = 0;
-
-  strData += '';
-
-  while (i < strData.length) {
-    c1 = strData.charCodeAt(i) & 0xFF;
-    seqlen = 0;
-
-    // http://en.wikipedia.org/wiki/UTF-8#Codepage_layout
-    if (c1 <= 0xBF) {
-      c1 = (c1 & 0x7F);
-      seqlen = 1;
-    } else if (c1 <= 0xDF) {
-      c1 = (c1 & 0x1F);
-      seqlen = 2;
-    } else if (c1 <= 0xEF) {
-      c1 = (c1 & 0x0F);
-      seqlen = 3;
-    } else {
-      c1 = (c1 & 0x07);
-      seqlen = 4;
-    }
-
-    for (var ai = 1; ai < seqlen; ++ai) {
-      c1 = ((c1 << 0x06) | (strData.charCodeAt(ai + i) & 0x3F));
-    }
-
-    if (seqlen === 4) {
-      c1 -= 0x10000;
-      tmpArr.push(String.fromCharCode(0xD800 | ((c1 >> 10) & 0x3FF)));
-      tmpArr.push(String.fromCharCode(0xDC00 | (c1 & 0x3FF)));
-    } else {
-      tmpArr.push(String.fromCharCode(c1));
-    }
-
-    i += seqlen;
-  }
-
-  return tmpArr.join('');
-}
-
-var Platform = require('platform');
+var Timeline = require('timeline');
 var UI = require('ui');
 var ajax = require('ajax');
 // Used for saving stations as favorites
 var Settings = require('settings');
 
-/*function geoToMVV(lat, lon) {
-  var d_lat = 48.139398-lat; //Relative Abweichung von der Mariensäule
-  var m_per_lon = Math.cos(lat/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
-  //var m_per_lon = Math.cos(48.139398/180*Math.PI) * 2 * Math.PI * 6371 / 360 * 1000;
-  var d_lon = 11.578584-lon; //Relative Abweichung von der Mariensäule
-  //var d_y = parseInt(lat - 55.5871) * 110970;
-  //var d_lon = 11.578584-lon;
-  //relativ zum Nationaltheater: "4468748.00000,826433.00000" 48.139398, 11.578584
-  //var d_x = parseInt((lon + 48.1732333333333) * 74789.366666667);
-  var d_x = parseInt(d_lon * m_per_lon);
-  var d_y = parseInt(d_lat * 2 * Math.PI * 6371 / 360 * 1000);
-  return {
-    x: 4468748 - d_x,
-    y: 826433 + d_y
-  };
-}*/
-
 function geoToMVV(lat, lon, callback) {
-  // Uncomment these two lines for testing only
+  //Uncomment these two lines for testing only
   //lat = 48.139398;
   //lon = 11.578584;
   ajax({
@@ -177,6 +101,19 @@ function formatTitleWithStar(stopID, stopName) {
       return stopName;
     }
   }
+}
+
+function setReminder(title, date)
+{
+  Timeline.createNotification({
+    id: title+date.toISOString(),
+    time: date.toISOString(),
+    layout: {
+      type: "genericPin",
+      title: title,
+      tinyIcon: "system://images/NOTIFICATION_FLAG"
+    }
+  });
 }
 
 function getFavItems() {
@@ -274,8 +211,42 @@ var stationdetails = function(e) {
       }
       var diff = Math.max(0, Math.round((then - now) / 1000 / 60) + 1440) % 1440;
       var type = "R";
-      if (jsonData[i].linie.match(/^S\d/)) {
+      if (jsonData[i].linie.match(/^S1/)) {
+        type = "S1";
+      } else if (jsonData[i].linie.match(/^S20/)) {
+        type = "S20";
+      } else if (jsonData[i].linie.match(/^S2/)) {
+        type = "S2";
+      } else if (jsonData[i].linie.match(/^S3/)) {
+        type = "S3";
+      } else if (jsonData[i].linie.match(/^S4/)) {
+        type = "S4";
+      } else if (jsonData[i].linie.match(/^S5/)) {
+        type = "S5";
+      } else if (jsonData[i].linie.match(/^S6/)) {
+        type = "S6";
+      } else if (jsonData[i].linie.match(/^S7/)) {
+        type = "S7";
+      } else if (jsonData[i].linie.match(/^S8/)) {
+        type = "S8";
+      } else if (jsonData[i].linie.match(/^S\d/)) {
         type = "S";
+      } else if (jsonData[i].linie.match(/^U1/)) {
+        type = "U1";
+      } else if (jsonData[i].linie.match(/^U2/)) {
+        type = "U2";
+      } else if (jsonData[i].linie.match(/^U3/)) {
+        type = "U3";
+      } else if (jsonData[i].linie.match(/^U4/)) {
+        type = "U4";
+      } else if (jsonData[i].linie.match(/^U5/)) {
+        type = "U5";
+      } else if (jsonData[i].linie.match(/^U6/)) {
+        type = "U6";
+      } else if (jsonData[i].linie.match(/^U7/)) {
+        type = "U7";
+      } else if (jsonData[i].linie.match(/^U8/)) {
+        type = "U8";
       } else if(jsonData[i].linie.match(/^U\d/i)) {
         type = "U";
       } else if(jsonData[i].linie.match(/^N\d/i)) {
@@ -288,7 +259,9 @@ var stationdetails = function(e) {
         type = "T";
       }
       body.push({
-        title: jsonData[i].linie + " " + jsonData[i].finalStop,
+        title: jsonData[i].linie.match(/^(S\d|U\d|0)/)
+             ? jsonData[i].finalStop
+             : jsonData[i].linie + " " + jsonData[i].finalStop,
         subtitle: jsonData[i].time + " (in " +diff+ (isDe?" Minuten)":" minutes)"),
         time: then,
         icon: "IMAGES_"+type+"_PNG"
@@ -343,5 +316,10 @@ departures.on("click", "back", function(){
   departures.hide();
 });
 
+/*departures.on("longSelect", function(e){
+  var time = e.item.time;
+  var date = new Date(time);
+  setReminder("Abfahrt "+e.section.title, date);
+});*/
 
 start();
