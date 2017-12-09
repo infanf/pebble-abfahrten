@@ -22,8 +22,8 @@ var Settings = require('settings');
 
 function geoToMVV(lat, lon, callback) {
   //Uncomment these two lines for testing only
-  //lat = 48.139398;
-  //lon = 11.578584;
+  /*lat = 48.139398;
+  lon = 11.578584;*/
   ajax({
     url: "http://m.mvv-muenchen.de/jqm/mvv_lite/XSLT_STOPFINDER_REQUEST?language=de&stateless=1&type_sf=coord&name_sf="+lon+"%3A"+ lat +"%3AWGS84[DD.ddddd]%3AAktuelle+Position&convertCoord2LocationServer=1&_=1465820721498",
     type: 'json' 
@@ -156,8 +156,8 @@ var start = function() {
   navigator.geolocation.getCurrentPosition(function(position) {
     geoToMVV(position.coords.latitude , position.coords.longitude, function(mvv){
       //console.debug(mvv.x+":"+mvv.y);
-      //mvv.x = 4467303;
-      //mvv.y = 826265;
+      /*mvv.x = 4467303;
+      mvv.y = 826265;*/
       ajax({
         url: "http://efa.mvv-muenchen.de/ng/XSLT_COORD_REQUEST?&coord="+mvv.x+"%3A"+mvv.y+"%3AMVTT&inclFilter=1&language=en&outputFormat=json&type_1=GIS_POINT&radius_1=1057&inclDrawClasses_1=101%3A102%3A103&type_2=STOP&radius_2=1057",
         type: 'json' 
@@ -211,7 +211,9 @@ var stationdetails = function(e) {
       }
       var diff = Math.max(0, Math.round((then - now) / 1000 / 60) + 1440) % 1440;
       var type = "R";
-      if (jsonData[i].linie.match(/^S1/)) {
+      if (jsonData[i].linie.match(/^S18/)) {
+        type = "S18";
+      } else if (jsonData[i].linie.match(/^S1/)) {
         type = "S1";
       } else if (jsonData[i].linie.match(/^S20/)) {
         type = "S20";
@@ -229,7 +231,7 @@ var stationdetails = function(e) {
         type = "S7";
       } else if (jsonData[i].linie.match(/^S8/)) {
         type = "S8";
-      } else if (jsonData[i].linie.match(/^S\d/)) {
+      } else if (jsonData[i].linie.match(/^S/)) {
         type = "S";
       } else if (jsonData[i].linie.match(/^U1/)) {
         type = "U1";
@@ -247,16 +249,22 @@ var stationdetails = function(e) {
         type = "U7";
       } else if (jsonData[i].linie.match(/^U8/)) {
         type = "U8";
-      } else if(jsonData[i].linie.match(/^U\d/i)) {
+      } else if(jsonData[i].linie.match(/^U/i)) {
         type = "U";
-      } else if(jsonData[i].linie.match(/^N\d/i)) {
+      } else if(jsonData[i].linie.match(/^N/i)) {
         type = "N";
-      } else if(jsonData[i].linie.match(/^X\d/i)) {
+      } else if(jsonData[i].linie.match(/^X/i)) {
         type = "X";
       } else if(parseInt(jsonData[i].linie) >= 40) {
         type = "B";
       } else if(parseInt(jsonData[i].linie) > 0) {
         type = "T";
+      } else if(jsonData[i].finalStop.match(/Bayrischzell|Lenggries|Tegernsee|Schliersee|Bad Tölz/)) {
+        type = "BOB";
+      } else if(jsonData[i].finalStop.match(/Deisenhofen|Holzkirchen|Rosenheim|Salzburg|Kufstein/)) {
+        type = "MER";
+//      } else if(jsonData[i].finalStop.match(/Kempten|Hof Hbf|^Prag|^Praha/i)) {
+//        type = "ALX";
       }
       body.push({
         title: jsonData[i].linie.match(/^(S\d|U\d|0)/)

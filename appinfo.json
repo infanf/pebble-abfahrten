@@ -29,6 +29,21 @@
                 "type": "font"
             },
             {
+                "file": "images/s18.png",
+                "name": "IMAGES_S18_PNG",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/mer.png",
+                "name": "IMAGES_MER_PNG",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/bob.png",
+                "name": "IMAGES_BOB_PNG",
+                "type": "png"
+            },
+            {
                 "file": "images/u8.png",
                 "name": "IMAGES_U8_PNG",
                 "type": "png"
@@ -170,7 +185,7 @@
     ],
     "uuid": "54a4d60e-d4ca-4022-8631-e858acf460e7",
     "versionCode": 1,
-    "versionLabel": "2.2",
+    "versionLabel": "2.5",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false
